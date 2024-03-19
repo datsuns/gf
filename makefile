@@ -4,6 +4,9 @@ SRC     := $(filter-out %_test.go,$(SRC_ALL))
 run:
 	go run $(SRC)
 
+build:
+	go build
+
 test:
 	go test -v
 
