@@ -21,6 +21,7 @@ func main() {
 
 	for e := range ui.PollEvents() {
 		if e.Type == ui.KeyboardEvent {
+			log.Println(e.ID)
 			break
 		}
 	}
