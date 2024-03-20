@@ -1,9 +1,11 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/cockroachdb/errors"
 )
 
 type Path string
@@ -17,14 +19,14 @@ func NewDir(path Path) (*Dir, error) {
 	var err error
 	abs, err := filepath.Abs(string(path))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "filepath.Abs()")
 	}
 	if _, err := os.Stat(abs); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("os.Stat(%s)", abs))
 	}
 	ret := &Dir{Pwd: path, Entries: []os.FileInfo{}}
 	if err := ret.Glob(); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "dir.Glob()")
 	}
 	return ret, nil
 }
@@ -59,12 +61,12 @@ func (d *Dir) Glob() error {
 	latched := []os.FileInfo{}
 	found, err := filepath.Glob(filepath.Join(d.Cur(), "*"))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	for _, f := range found {
 		s, err := os.Stat(f)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		latched = append(latched, s)
 	}

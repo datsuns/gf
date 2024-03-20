@@ -1,5 +1,7 @@
 package main
 
+import "github.com/cockroachdb/errors"
+
 type App struct {
 	Current PaneSide
 	Panes   []*Pane
@@ -7,13 +9,13 @@ type App struct {
 
 func NewApp(c *Config) (*App, error) {
 	var e error
-	left, e := NewPane(c.LeftPath)
+	left, e := NewPane(c.LeftPath())
 	if e != nil {
-		return nil, e
+		return nil, errors.Wrap(e, "NewPane(left)")
 	}
-	right, e := NewPane(c.RightPath)
+	right, e := NewPane(c.RightPath())
 	if e != nil {
-		return nil, e
+		return nil, errors.Wrap(e, "NewPane(right)")
 	}
 	panes := make([]*Pane, 2, 2)
 	panes[LeftPane] = left
