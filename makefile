@@ -12,6 +12,7 @@ test:
 
 setup:
 	go install github.com/datsuns/autocmd@latest
+	go install github.com/go-delve/delve/cmd/dlv@latest
 	go get -u github.com/gizak/termui/v3
 	go get -u github.com/pelletier/go-toml/v2
 	go get -u github.com/cockroachdb/errors
@@ -19,8 +20,11 @@ setup:
 auto:
 	autocmd -v -t '.*\.go' -t makefile -- make test
 
+gdb:
+	dlv debug
+
 dbg:
 	@echo $(SRC_ALL)
 	@echo $(SRC)
 
-.PHONY: run test auto dbg
+.PHONY: run build test setup auto dbg
