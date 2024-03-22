@@ -82,6 +82,10 @@ func (p *Pane) Reload() {
 	}
 }
 
+func (p *Pane) Up() error {
+	return p.Dir.Up()
+}
+
 func (p *Pane) Down() error {
 	return p.Dir.Down(Path(p.Selected()))
 }

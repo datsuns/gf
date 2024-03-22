@@ -60,7 +60,7 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		case 'l':
 			pane = changePane(app, appCtx, RightPane)
 		case 'u':
-			if err := pane.Dir.Up(); err == nil {
+			if err := pane.Up(); err == nil {
 				pane.Reload()
 			}
 		case 'q':
