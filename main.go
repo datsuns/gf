@@ -5,10 +5,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-func changePane(app *tview.Application, ctx *App, side PaneSide) *Pane {
-	ctx.Current = side
-	app.SetFocus(ctx.Panes[ctx.Current].W)
-	return ctx.Panes[ctx.Current]
+func changePane(app *tview.Application, appCtx *App, side PaneSide) *Pane {
+	appCtx.Current = side
+	app.SetFocus(appCtx.Panes[appCtx.Current].W)
+	return appCtx.Panes[appCtx.Current]
 }
 
 func saveConfig(appCtx *App, cfg *Config) {
