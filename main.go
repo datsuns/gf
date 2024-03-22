@@ -7,25 +7,25 @@ import (
 
 func changePane(app *tview.Application, appCtx *App, side PaneSide) *Pane {
 	appCtx.Current = side
-	app.SetFocus(appCtx.Panes[appCtx.Current].W)
-	return appCtx.Panes[appCtx.Current]
+	app.SetFocus(appCtx.CurPane().W)
+	return appCtx.CurPane()
 }
 
 func saveConfig(appCtx *App, cfg *Config) {
-	cfg.Body.LeftPath = appCtx.Panes[LeftPane].CurPath()
-	cfg.Body.RightPath = appCtx.Panes[RightPane].CurPath()
+	cfg.Body.LeftPath = appCtx.Pane(LeftPane).CurPath()
+	cfg.Body.RightPath = appCtx.Pane(RightPane).CurPath()
 	cfg.Save()
 }
 
 func enterIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = IncSearch
-	pane := appCtx.Panes[appCtx.Current]
+	pane := appCtx.CurPane()
 	pane.W.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
 }
 
 func exitIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = Normal
-	pane := appCtx.Panes[appCtx.Current]
+	pane := appCtx.CurPane()
 	pane.W.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite))
 	pane.T.Clear()
 }
@@ -41,7 +41,7 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		if pane.CurItem()+cfg.Body.ScrollLines < pane.ItemCount() {
 			pane.SetItem(pane.CurItem() + cfg.Body.ScrollLines)
 		} else {
-			pane.SetItem(pane.W.GetItemCount() - 1)
+			pane.SetItem(pane.ItemCount() - 1)
 		}
 	case tcell.KeyCtrlU:
 		pane.SetItem(pane.CurItem() - cfg.Body.ScrollLines)
