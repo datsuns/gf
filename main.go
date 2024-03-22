@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -100,7 +98,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(cfg.Body)
 	appCtx, err := NewApp(cfg)
 	if err != nil {
 		panic(err)
