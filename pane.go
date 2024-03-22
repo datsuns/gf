@@ -33,6 +33,10 @@ func (p *Pane) Cur() string {
 	return p.Dir.Cur()
 }
 
+func (p *Pane) CurPath() Path {
+	return Path(p.Dir.Cur())
+}
+
 func (p *Pane) Selected() string {
 	main, _ := p.W.GetItemText(p.W.GetCurrentItem())
 	return main

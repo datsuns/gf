@@ -11,7 +11,13 @@ func changePane(app *tview.Application, ctx *App, side PaneSide) *Pane {
 	return ctx.Panes[ctx.Current]
 }
 
-func mainHandler(app *tview.Application, appCtx *App, event *tcell.EventKey) *tcell.EventKey {
+func saveConfig(appCtx *App, cfg *Config) {
+	cfg.Body.LeftPath = appCtx.Panes[LeftPane].CurPath()
+	cfg.Body.RightPath = appCtx.Panes[RightPane].CurPath()
+	cfg.Save()
+}
+
+func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
 	pane := appCtx.Panes[appCtx.Current]
 	switch event.Key() {
 	case tcell.KeyEnter:
@@ -35,6 +41,7 @@ func mainHandler(app *tview.Application, appCtx *App, event *tcell.EventKey) *tc
 				pane.Reload()
 			}
 		case 'q':
+			saveConfig(appCtx, cfg)
 			app.Stop()
 		}
 	}
@@ -64,7 +71,7 @@ func main() {
 		AddItem(appCtx.Panes[RightPane].W, 0, 1, false)
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		return mainHandler(app, appCtx, event)
+		return mainHandler(app, appCtx, cfg, event)
 	})
 
 	app.SetRoot(flex, true).SetFocus(flex)
