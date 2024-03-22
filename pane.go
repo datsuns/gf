@@ -14,6 +14,7 @@ const (
 type Pane struct {
 	Dir *Dir
 	W   *tview.List
+	T   *tview.TextView
 }
 
 func NewPane(path Path) (*Pane, error) {
@@ -23,9 +24,12 @@ func NewPane(path Path) (*Pane, error) {
 	}
 	w := tview.NewList().ShowSecondaryText(false)
 	w.SetBorder(true)
+	t := tview.NewTextView()
+	t.SetBorder(true)
 	return &Pane{
 		Dir: d,
 		W:   w,
+		T:   t,
 	}, nil
 }
 

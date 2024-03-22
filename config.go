@@ -8,9 +8,14 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+const (
+	DefaultScrollLines = 7
+)
+
 type ConfigEntry struct {
-	LeftPath  Path
-	RightPath Path
+	LeftPath    Path
+	RightPath   Path
+	ScrollLines int
 }
 
 type Config struct {
@@ -33,14 +38,18 @@ func LoadConfig(path Path) (*Config, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "toml.Unmarshal()")
 	}
+	if entry.ScrollLines == 0 {
+		entry.ScrollLines = DefaultScrollLines
+	}
 	return &Config{Path: path, Body: &entry}, nil
 }
 
 func GenDefaultConfig(path Path) (*ConfigEntry, error) {
 	c, _ := os.Getwd()
 	d := &ConfigEntry{
-		LeftPath:  Path(c),
-		RightPath: Path(c),
+		LeftPath:    Path(c),
+		RightPath:   Path(c),
+		ScrollLines: DefaultScrollLines,
 	}
 	err := save(path, d)
 	if err != nil {

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -19,6 +21,9 @@ func saveConfig(appCtx *App, cfg *Config) {
 
 func enterIncSearch(app *tview.Application, appCtx *App) {
 	appCtx.Mode = IncSearch
+	appCtx.IncSearchText = tview.NewTextView()
+	appCtx.IncSearchText.SetBorder(true)
+	//appCtx.Root.AddItem(appCtx.IncSearchText, 0, 0, false)
 }
 
 func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
@@ -28,6 +33,14 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		if err := pane.Dir.Down(Path(pane.Selected())); err == nil {
 			pane.Reload()
 		}
+	case tcell.KeyCtrlD:
+		if pane.W.GetCurrentItem()+cfg.Body.ScrollLines < pane.W.GetItemCount() {
+			pane.W.SetCurrentItem(pane.W.GetCurrentItem() + cfg.Body.ScrollLines)
+		} else {
+			pane.W.SetCurrentItem(pane.W.GetItemCount() - 1)
+		}
+	case tcell.KeyCtrlU:
+		pane.W.SetCurrentItem(pane.W.GetCurrentItem() - cfg.Body.ScrollLines)
 	case tcell.KeyRune:
 		switch event.Rune() {
 		case 'f':
@@ -55,11 +68,20 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 }
 
 func mainHandlerIncSearch(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
+	pane := appCtx.Panes[appCtx.Current]
 	switch event.Key() {
 	case tcell.KeyEnter:
 		appCtx.Mode = Normal
+		pane.T.Clear()
 	case tcell.KeyESC:
 		appCtx.Mode = Normal
+		pane.T.Clear()
+	case tcell.KeyRune:
+		pane.T.SetText(pane.T.GetText(false) + string(event.Rune()))
+		candidate := pane.W.FindItems(pane.T.GetText(false), "", false, true)
+		if len(candidate) > 0 {
+			pane.W.SetCurrentItem(candidate[0])
+		}
 	}
 	return event
 }
@@ -78,6 +100,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(cfg.Body)
 	appCtx, err := NewApp(cfg)
 	if err != nil {
 		panic(err)
@@ -89,15 +112,21 @@ func main() {
 
 	app := tview.NewApplication()
 
-	flex := tview.NewFlex().
-		AddItem(appCtx.Panes[LeftPane].W, 0, 1, true).
-		AddItem(appCtx.Panes[RightPane].W, 0, 1, false)
+	grid := tview.NewGrid().
+		SetRows(-10, -1).
+		SetColumns(-2, 0).
+		SetBorders(false).
+		AddItem(appCtx.Panes[LeftPane].W, 0, 0, 1, 1, 0, 0, true).
+		AddItem(appCtx.Panes[RightPane].W, 0, 1, 1, 2, 0, 0, false).
+		AddItem(appCtx.Panes[LeftPane].T, 1, 0, 1, 1, 0, 0, false).
+		AddItem(appCtx.Panes[RightPane].T, 1, 1, 1, 2, 0, 0, false)
 
+	appCtx.Root = grid
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return mainHandler(app, appCtx, cfg, event)
 	})
 
-	app.SetRoot(flex, true).SetFocus(flex)
+	app.SetRoot(grid, true).SetFocus(grid)
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
