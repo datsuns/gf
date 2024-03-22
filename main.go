@@ -17,15 +17,13 @@ func saveConfig(appCtx *App, cfg *Config) {
 	cfg.Save()
 }
 
-func enterIncSearch(app *tview.Application, appCtx *App) {
+func enterIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = IncSearch
-	appCtx.IncSearchText = tview.NewTextView()
-	appCtx.IncSearchText.SetBorder(true)
 	pane := appCtx.Panes[appCtx.Current]
 	pane.W.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
 }
 
-func exitIncSearch(app *tview.Application, appCtx *App) {
+func exitIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = Normal
 	pane := appCtx.Panes[appCtx.Current]
 	pane.W.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite))
@@ -73,7 +71,7 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 	return event
 }
 
-func mainHandlerIncSearch(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
+func mainHandlerIncSearch(app *tview.Application, appCtx *App, _ *Config, event *tcell.EventKey) *tcell.EventKey {
 	pane := appCtx.Panes[appCtx.Current]
 	switch event.Key() {
 	case tcell.KeyEnter:
