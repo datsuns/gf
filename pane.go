@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gizak/termui/v3/widgets"
+	"github.com/rivo/tview"
 )
 
 type PaneSide int
@@ -12,8 +12,8 @@ const (
 )
 
 type Pane struct {
-	Dir    *Dir
-	Widget *widgets.List
+	Dir *Dir
+	W   *tview.List
 }
 
 func NewPane(path Path) (*Pane, error) {
@@ -21,7 +21,12 @@ func NewPane(path Path) (*Pane, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Pane{Dir: d}, nil
+	w := tview.NewList().ShowSecondaryText(false)
+	w.SetBorder(true)
+	return &Pane{
+		Dir: d,
+		W:   w,
+	}, nil
 }
 
 func (p *Pane) Cur() string {
@@ -29,24 +34,26 @@ func (p *Pane) Cur() string {
 }
 
 func (p *Pane) Selected() string {
-	return p.Widget.Rows[p.Widget.SelectedRow]
+	main, _ := p.W.GetItemText(p.W.GetCurrentItem())
+	return main
 }
 
 func (p *Pane) DirSelected() bool {
-	if len(p.Widget.Rows) == 0 {
+	if p.W.GetItemCount() == 0 {
 		return false
 	}
 	return p.Selected()[len(p.Selected())-1] == '/'
 }
 
 func (p *Pane) Reload() {
-	p.Widget.Title = p.Dir.Cur()
-	p.Widget.Rows = []string{}
+	p.W.Clear()
+	p.W.SetTitle(p.Dir.Cur())
+
 	for _, f := range p.Dir.Entries {
 		if f.IsDir() {
-			p.Widget.Rows = append(p.Widget.Rows, f.Name()+"/")
+			p.W.AddItem(f.Name()+"/", "", 0, nil)
 		} else {
-			p.Widget.Rows = append(p.Widget.Rows, f.Name())
+			p.W.AddItem(f.Name(), "", 0, nil)
 		}
 	}
 }

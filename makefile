@@ -13,7 +13,7 @@ test:
 setup:
 	go install github.com/datsuns/autocmd@latest
 	go install github.com/go-delve/delve/cmd/dlv@latest
-	go get -u github.com/gizak/termui/v3
+	go get -u github.com/rivo/tview
 	go get -u github.com/pelletier/go-toml/v2
 	go get -u github.com/cockroachdb/errors
 

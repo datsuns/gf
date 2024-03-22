@@ -1,107 +1,75 @@
 package main
 
 import (
-	"log"
-
-	ui "github.com/gizak/termui/v3"
-	"github.com/gizak/termui/v3/widgets"
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
-func genPane(app *App, side PaneSide) *widgets.List {
-	w := widgets.NewList()
-	p := app.Panes[side]
-	p.Widget = w
-	p.Reload()
-
-	if side == LeftPane {
-		w.SetRect(0, 00, 60, 30)
-	} else {
-		w.SetRect(60, 00, 120, 30)
-	}
-	return w
+func changePane(app *tview.Application, ctx *App, side PaneSide) *Pane {
+	ctx.Current = side
+	app.SetFocus(ctx.Panes[ctx.Current].W)
+	return ctx.Panes[ctx.Current]
 }
 
-func rollbackSelected(w *widgets.List) {
-	w.SelectedRowStyle = ui.NewStyle(ui.ColorWhite)
-	ui.Render(w)
-}
-
-func changeTo(app *App, side PaneSide) *Pane {
-	app.Current = side
-	ret := app.Panes[app.Current]
-	ret.Widget.SelectedRowStyle = ui.NewStyle(ui.ColorYellow)
-	ui.Render(ret.Widget)
-	return ret
-}
-
-func mainHandler(app *App) {
-	uiEvents := ui.PollEvents()
-	for {
-		e := <-uiEvents
-		pane := app.Panes[app.Current]
-		switch e.ID {
-		case "q", "<C-c>":
-			return
-		case "j", "<Down>":
-			pane.Widget.ScrollDown()
-		case "k", "<Up>":
-			pane.Widget.ScrollUp()
-		case "l":
-			rollbackSelected(pane.Widget)
-			pane = changeTo(app, RightPane)
-		case "h":
-			rollbackSelected(pane.Widget)
-			pane = changeTo(app, LeftPane)
-		case "u":
+func mainHandler(app *tview.Application, appCtx *App, event *tcell.EventKey) *tcell.EventKey {
+	pane := appCtx.Panes[appCtx.Current]
+	switch event.Key() {
+	case tcell.KeyEnter:
+		if err := pane.Dir.Down(Path(pane.Selected())); err == nil {
+			pane.Reload()
+		}
+	case tcell.KeyRune:
+		switch event.Rune() {
+		case 'h':
+			pane = changePane(app, appCtx, LeftPane)
+		case 'j':
+			pane.W.SetCurrentItem(pane.W.GetCurrentItem() + 1)
+		case 'k':
+			if pane.W.GetCurrentItem() > 0 {
+				pane.W.SetCurrentItem(pane.W.GetCurrentItem() - 1)
+			}
+		case 'l':
+			pane = changePane(app, appCtx, RightPane)
+		case 'u':
 			if err := pane.Dir.Up(); err == nil {
-				pane.Widget.SelectedRow = 0
 				pane.Reload()
 			}
-			ui.Render(pane.Widget)
-		case "<Enter>":
-			if err := pane.Dir.Down(Path(pane.Selected())); err == nil {
-				pane.Widget.SelectedRow = 0
-				pane.Reload()
-			}
-			ui.Render(pane.Widget)
+		case 'q':
+			app.Stop()
 		}
-
-		if pane.DirSelected() {
-			pane.Widget.SelectedRowStyle = ui.NewStyle(ui.ColorCyan)
-		} else {
-			pane.Widget.SelectedRowStyle = ui.NewStyle(ui.ColorYellow)
-		}
-		ui.Render(pane.Widget)
 	}
+	return event
 }
 
 func main() {
 	var err error
-	if err := ui.Init(); err != nil {
-		log.Fatalf("failed to initialize termui: %v", err)
-	}
-	defer ui.Close()
 
 	cfg, err := LoadConfig("gf.toml")
 	if err != nil {
 		panic(err)
 	}
-	app, err := NewApp(cfg)
+	appCtx, err := NewApp(cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	app.Current = LeftPane
-	genPane(app, LeftPane)
-	genPane(app, RightPane)
-	pane := app.Panes[app.Current]
-	if pane.DirSelected() {
-		pane.Widget.SelectedRowStyle = ui.NewStyle(ui.ColorCyan)
-	} else {
-		pane.Widget.SelectedRowStyle = ui.NewStyle(ui.ColorYellow)
+	appCtx.Current = LeftPane
+	appCtx.Panes[LeftPane].Reload()
+	appCtx.Panes[RightPane].Reload()
+
+	app := tview.NewApplication()
+
+	flex := tview.NewFlex().
+		AddItem(appCtx.Panes[LeftPane].W, 0, 1, true).
+		AddItem(appCtx.Panes[RightPane].W, 0, 1, false)
+
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		return mainHandler(app, appCtx, event)
+	})
+
+	app.SetRoot(flex, true).SetFocus(flex)
+	if err := app.Run(); err != nil {
+		panic(err)
 	}
 
-	ui.Render(app.Panes[LeftPane].Widget)
-	ui.Render(app.Panes[RightPane].Widget)
-	mainHandler(app)
 }
