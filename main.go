@@ -17,7 +17,11 @@ func saveConfig(appCtx *App, cfg *Config) {
 	cfg.Save()
 }
 
-func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
+func enterIncSearch(app *tview.Application, appCtx *App) {
+	appCtx.Mode = IncSearch
+}
+
+func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
 	pane := appCtx.Panes[appCtx.Current]
 	switch event.Key() {
 	case tcell.KeyEnter:
@@ -26,6 +30,8 @@ func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.
 		}
 	case tcell.KeyRune:
 		switch event.Rune() {
+		case 'f':
+			enterIncSearch(app, appCtx)
 		case 'h':
 			pane = changePane(app, appCtx, LeftPane)
 		case 'j':
@@ -46,6 +52,23 @@ func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.
 		}
 	}
 	return event
+}
+
+func mainHandlerIncSearch(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
+	switch event.Key() {
+	case tcell.KeyEnter:
+		appCtx.Mode = Normal
+	case tcell.KeyESC:
+		appCtx.Mode = Normal
+	}
+	return event
+}
+
+func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
+	if appCtx.Mode == IncSearch {
+		return mainHandlerIncSearch(app, appCtx, cfg, event)
+	}
+	return mainHandlerNormal(app, appCtx, cfg, event)
 }
 
 func main() {
