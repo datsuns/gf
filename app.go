@@ -15,7 +15,7 @@ const (
 type App struct {
 	Current       PaneSide
 	Mode          AppMode
-	Root          *tview.Grid
+	Root          *tview.Flex
 	IncSearchText *tview.TextView
 	Panes         []*Pane
 }

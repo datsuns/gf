@@ -21,7 +21,15 @@ func enterIncSearch(app *tview.Application, appCtx *App) {
 	appCtx.Mode = IncSearch
 	appCtx.IncSearchText = tview.NewTextView()
 	appCtx.IncSearchText.SetBorder(true)
-	//appCtx.Root.AddItem(appCtx.IncSearchText, 0, 0, false)
+	pane := appCtx.Panes[appCtx.Current]
+	pane.W.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
+}
+
+func exitIncSearch(app *tview.Application, appCtx *App) {
+	appCtx.Mode = Normal
+	pane := appCtx.Panes[appCtx.Current]
+	pane.W.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite))
+	pane.T.Clear()
 }
 
 func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
@@ -69,11 +77,9 @@ func mainHandlerIncSearch(app *tview.Application, appCtx *App, cfg *Config, even
 	pane := appCtx.Panes[appCtx.Current]
 	switch event.Key() {
 	case tcell.KeyEnter:
-		appCtx.Mode = Normal
-		pane.T.Clear()
+		exitIncSearch(app, appCtx)
 	case tcell.KeyESC:
-		appCtx.Mode = Normal
-		pane.T.Clear()
+		exitIncSearch(app, appCtx)
 	case tcell.KeyRune:
 		pane.T.SetText(pane.T.GetText(false) + string(event.Rune()))
 		candidate := pane.W.FindItems(pane.T.GetText(false), "", false, true)
@@ -109,21 +115,15 @@ func main() {
 
 	app := tview.NewApplication()
 
-	grid := tview.NewGrid().
-		SetRows(-10, -1).
-		SetColumns(-2, 0).
-		SetBorders(false).
-		AddItem(appCtx.Panes[LeftPane].W, 0, 0, 1, 1, 0, 0, true).
-		AddItem(appCtx.Panes[RightPane].W, 0, 1, 1, 2, 0, 0, false).
-		AddItem(appCtx.Panes[LeftPane].T, 1, 0, 1, 1, 0, 0, false).
-		AddItem(appCtx.Panes[RightPane].T, 1, 1, 1, 2, 0, 0, false)
+	flex := tview.NewFlex().
+		AddItem(appCtx.Panes[LeftPane].W, 0, 1, true).
+		AddItem(appCtx.Panes[RightPane].W, 0, 1, false)
 
-	appCtx.Root = grid
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return mainHandler(app, appCtx, cfg, event)
 	})
 
-	app.SetRoot(grid, true).SetFocus(grid)
+	app.SetRoot(flex, true).SetFocus(flex)
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
