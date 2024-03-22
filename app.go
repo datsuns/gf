@@ -32,3 +32,11 @@ func NewApp(c *Config) (*App, error) {
 	panes[RightPane] = right
 	return &App{Current: LeftPane, Mode: Normal, Panes: panes}, nil
 }
+
+func (a *App) Pane(side PaneSide) *Pane {
+	return a.Panes[side]
+}
+
+func (a *App) CurPane() *Pane {
+	return a.Pane(a.Current)
+}

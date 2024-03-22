@@ -31,20 +31,20 @@ func exitIncSearch(_ *tview.Application, appCtx *App) {
 }
 
 func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
-	pane := appCtx.Panes[appCtx.Current]
+	pane := appCtx.CurPane()
 	switch event.Key() {
 	case tcell.KeyEnter:
-		if err := pane.Dir.Down(Path(pane.Selected())); err == nil {
+		if err := pane.Down(); err == nil {
 			pane.Reload()
 		}
 	case tcell.KeyCtrlD:
-		if pane.W.GetCurrentItem()+cfg.Body.ScrollLines < pane.W.GetItemCount() {
-			pane.W.SetCurrentItem(pane.W.GetCurrentItem() + cfg.Body.ScrollLines)
+		if pane.CurItem()+cfg.Body.ScrollLines < pane.ItemCount() {
+			pane.SetItem(pane.CurItem() + cfg.Body.ScrollLines)
 		} else {
-			pane.W.SetCurrentItem(pane.W.GetItemCount() - 1)
+			pane.SetItem(pane.W.GetItemCount() - 1)
 		}
 	case tcell.KeyCtrlU:
-		pane.W.SetCurrentItem(pane.W.GetCurrentItem() - cfg.Body.ScrollLines)
+		pane.SetItem(pane.CurItem() - cfg.Body.ScrollLines)
 	case tcell.KeyRune:
 		switch event.Rune() {
 		case 'f':
@@ -52,10 +52,10 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		case 'h':
 			pane = changePane(app, appCtx, LeftPane)
 		case 'j':
-			pane.W.SetCurrentItem(pane.W.GetCurrentItem() + 1)
+			pane.SetItem(pane.CurItem() + 1)
 		case 'k':
-			if pane.W.GetCurrentItem() > 0 {
-				pane.W.SetCurrentItem(pane.W.GetCurrentItem() - 1)
+			if pane.CurItem() > 0 {
+				pane.SetItem(pane.CurItem() - 1)
 			}
 		case 'l':
 			pane = changePane(app, appCtx, RightPane)
@@ -72,17 +72,17 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 }
 
 func mainHandlerIncSearch(app *tview.Application, appCtx *App, _ *Config, event *tcell.EventKey) *tcell.EventKey {
-	pane := appCtx.Panes[appCtx.Current]
+	pane := appCtx.CurPane()
 	switch event.Key() {
 	case tcell.KeyEnter:
 		exitIncSearch(app, appCtx)
 	case tcell.KeyESC:
 		exitIncSearch(app, appCtx)
 	case tcell.KeyRune:
-		pane.T.SetText(pane.T.GetText(false) + string(event.Rune()))
-		candidate := pane.W.FindItems(pane.T.GetText(false), "", false, true)
+		pane.SetText(pane.GetText() + string(event.Rune()))
+		candidate := pane.Find(pane.GetText())
 		if len(candidate) > 0 {
-			pane.W.SetCurrentItem(candidate[0])
+			pane.SetItem(candidate[0])
 		}
 	}
 	return event
@@ -114,8 +114,8 @@ func main() {
 	app := tview.NewApplication()
 
 	flex := tview.NewFlex().
-		AddItem(appCtx.Panes[LeftPane].W, 0, 1, true).
-		AddItem(appCtx.Panes[RightPane].W, 0, 1, false)
+		AddItem(appCtx.Pane(LeftPane).W, 0, 1, true).
+		AddItem(appCtx.Pane(RightPane).W, 0, 1, false)
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return mainHandler(app, appCtx, cfg, event)

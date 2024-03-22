@@ -41,6 +41,22 @@ func (p *Pane) CurPath() Path {
 	return Path(p.Dir.Cur())
 }
 
+func (p *Pane) CurItem() int {
+	return p.W.GetCurrentItem()
+}
+
+func (p *Pane) ItemCount() int {
+	return p.W.GetItemCount()
+}
+
+func (p *Pane) SetItem(n int) *tview.List {
+	return p.W.SetCurrentItem(n)
+}
+
+func (p *Pane) Find(s string) []int {
+	return p.W.FindItems(s, "", false, true)
+}
+
 func (p *Pane) Selected() string {
 	main, _ := p.W.GetItemText(p.W.GetCurrentItem())
 	return main
@@ -64,4 +80,16 @@ func (p *Pane) Reload() {
 			p.W.AddItem(f.Name(), "", 0, nil)
 		}
 	}
+}
+
+func (p *Pane) Down() error {
+	return p.Dir.Down(Path(p.Selected()))
+}
+
+func (p *Pane) GetText() string {
+	return p.T.GetText(false)
+}
+
+func (p *Pane) SetText(s string) *tview.TextView {
+	return p.T.SetText(s)
 }
