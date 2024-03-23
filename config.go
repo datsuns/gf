@@ -17,6 +17,7 @@ type ConfigEntry struct {
 	RightPath   Path
 	ScrollLines int
 	JumpList    map[string]string
+	Editor      string
 }
 
 type Config struct {
@@ -55,6 +56,7 @@ func GenDefaultConfig(path Path) (*ConfigEntry, error) {
 		RightPath:   Path(c),
 		ScrollLines: DefaultScrollLines,
 		JumpList:    map[string]string{},
+		Editor:      "",
 	}
 	err := save(path, d)
 	if err != nil {

@@ -115,3 +115,7 @@ func (p *Pane) GetText() string {
 func (p *Pane) SetText(s string) *tview.TextView {
 	return p.T.SetText(s)
 }
+
+func (p *Pane) ClearText() {
+	p.T.Clear()
+}

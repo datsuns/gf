@@ -53,3 +53,11 @@ func (a *App) Reload(side PaneSide) {
 func (a *App) CurPane() *Pane {
 	return a.Pane(a.Current)
 }
+
+func (a *App) CurPath(side PaneSide) Path {
+	return a.Pane(side).CurPath()
+}
+
+func (a *App) CurPaneWidget() *tview.List {
+	return a.Pane(a.Current).W
+}

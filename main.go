@@ -14,27 +14,40 @@ var (
 
 func changePane(app *tview.Application, appCtx *App, side PaneSide) *Pane {
 	appCtx.Current = side
-	app.SetFocus(appCtx.CurPane().W)
+	app.SetFocus(appCtx.CurPaneWidget())
 	return appCtx.CurPane()
 }
 
 func saveConfig(appCtx *App, cfg *Config) {
-	cfg.Body.LeftPath = appCtx.Pane(LeftPane).CurPath()
-	cfg.Body.RightPath = appCtx.Pane(RightPane).CurPath()
+	cfg.Body.LeftPath = appCtx.CurPath(LeftPane)
+	cfg.Body.RightPath = appCtx.CurPath(RightPane)
 	cfg.Save()
 }
 
 func enterIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = IncSearch
-	pane := appCtx.CurPane()
-	pane.W.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
+	w := appCtx.CurPaneWidget()
+	w.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorBlue))
 }
 
 func exitIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = Normal
-	pane := appCtx.CurPane()
-	pane.W.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite))
-	pane.T.Clear()
+	w := appCtx.CurPaneWidget()
+	w.SetSelectedStyle(tcell.StyleDefault.Foreground(tcell.ColorBlack).Background(tcell.ColorWhite))
+	appCtx.CurPane().ClearText()
+}
+
+func enterJumpListSelection(app *tview.Application, appCtx *App, cfg *Config) {
+	m := tview.NewList().ShowSecondaryText(true)
+	m.SetBorder(true)
+	m.SetTitle("jump list")
+	for name, path := range cfg.Body.JumpList {
+		m.AddItem(name, path, 0, nil)
+	}
+	appCtx.JumpList = m
+	appCtx.JumpSearch = ""
+	appCtx.Mode = SelectJump
+	app.SetRoot(m, false)
 }
 
 func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
@@ -49,16 +62,7 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 			pane.SetItem(pane.ItemCount() - 1)
 		}
 	case tcell.KeyCtrlJ:
-		m := tview.NewList().ShowSecondaryText(true)
-		m.SetBorder(true)
-		m.SetTitle("jump list")
-		for name, path := range cfg.Body.JumpList {
-			m.AddItem(name, path, 0, nil)
-		}
-		appCtx.JumpList = m
-		appCtx.JumpSearch = ""
-		appCtx.Mode = SelectJump
-		app.SetRoot(m, false)
+		enterJumpListSelection(app, appCtx, cfg)
 	case tcell.KeyCtrlU:
 		pane.SetItem(pane.CurItem() - cfg.Body.ScrollLines)
 	case tcell.KeyRune:
@@ -102,12 +106,16 @@ func mainHandlerIncSearch(app *tview.Application, appCtx *App, _ *Config, event 
 	return event
 }
 
+func backToNomal(app *tview.Application, appCtx *App) {
+	appCtx.Mode = Normal
+	app.SetRoot(appCtx.Root, false)
+}
+
 func selectJumpTarget(app *tview.Application, appCtx *App) {
 	n := appCtx.JumpList.GetCurrentItem()
 	_, path := appCtx.JumpList.GetItemText(n)
 	appCtx.CurPane().Jump(Path(path))
-	appCtx.Mode = Normal
-	app.SetRoot(appCtx.Root, false)
+	backToNomal(app, appCtx)
 }
 
 func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event *tcell.EventKey) *tcell.EventKey {
@@ -115,8 +123,7 @@ func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event
 	case tcell.KeyEnter:
 		selectJumpTarget(app, appCtx)
 	case tcell.KeyESC:
-		appCtx.Mode = Normal
-		app.SetRoot(appCtx.Root, false)
+		backToNomal(app, appCtx)
 	case tcell.KeyBS:
 		if len(appCtx.JumpSearch) > 0 {
 			appCtx.JumpSearch = appCtx.JumpSearch[:len(appCtx.JumpSearch)-1]
@@ -132,6 +139,8 @@ func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event
 			if n > 0 {
 				appCtx.JumpList.SetCurrentItem(n - 1)
 			}
+		case 'q':
+			backToNomal(app, appCtx)
 		}
 	}
 	return event
