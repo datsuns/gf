@@ -83,11 +83,19 @@ func (p *Pane) Reload() {
 }
 
 func (p *Pane) Up() error {
-	return p.Dir.Up()
+	if err := p.Dir.Up(); err != nil {
+		return err
+	}
+	p.Reload()
+	return nil
 }
 
 func (p *Pane) Down() error {
-	return p.Dir.Down(Path(p.Selected()))
+	if err := p.Dir.Down(Path(p.Selected())); err != nil {
+		return err
+	}
+	p.Reload()
+	return nil
 }
 
 func (p *Pane) Jump(path Path) error {

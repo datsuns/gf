@@ -42,6 +42,14 @@ func (a *App) Pane(side PaneSide) *Pane {
 	return a.Panes[side]
 }
 
+func (a *App) PaneWidget(side PaneSide) *tview.List {
+	return a.Pane(side).W
+}
+
+func (a *App) Reload(side PaneSide) {
+	a.Pane(side).Reload()
+}
+
 func (a *App) CurPane() *Pane {
 	return a.Pane(a.Current)
 }

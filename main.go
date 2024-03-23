@@ -41,9 +41,7 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 	pane := appCtx.CurPane()
 	switch event.Key() {
 	case tcell.KeyEnter:
-		if err := pane.Down(); err == nil {
-			pane.Reload()
-		}
+		pane.Down()
 	case tcell.KeyCtrlD:
 		if pane.CurItem()+cfg.Body.ScrollLines < pane.ItemCount() {
 			pane.SetItem(pane.CurItem() + cfg.Body.ScrollLines)
@@ -78,9 +76,7 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		case 'l':
 			pane = changePane(app, appCtx, RightPane)
 		case 'u':
-			if err := pane.Up(); err == nil {
-				pane.Reload()
-			}
+			pane.Up()
 		case 'q':
 			saveConfig(appCtx, cfg)
 			app.Stop()
@@ -90,13 +86,13 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 }
 
 func mainHandlerIncSearch(app *tview.Application, appCtx *App, _ *Config, event *tcell.EventKey) *tcell.EventKey {
-	pane := appCtx.CurPane()
 	switch event.Key() {
 	case tcell.KeyEnter:
 		exitIncSearch(app, appCtx)
 	case tcell.KeyESC:
 		exitIncSearch(app, appCtx)
 	case tcell.KeyRune:
+		pane := appCtx.CurPane()
 		pane.SetText(pane.GetText() + string(event.Rune()))
 		candidate := pane.Find(pane.GetText())
 		if len(candidate) > 0 {
@@ -106,14 +102,18 @@ func mainHandlerIncSearch(app *tview.Application, appCtx *App, _ *Config, event 
 	return event
 }
 
+func selectJumpTarget(app *tview.Application, appCtx *App) {
+	n := appCtx.JumpList.GetCurrentItem()
+	_, path := appCtx.JumpList.GetItemText(n)
+	appCtx.CurPane().Jump(Path(path))
+	appCtx.Mode = Normal
+	app.SetRoot(appCtx.Root, false)
+}
+
 func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyEnter:
-		n := appCtx.JumpList.GetCurrentItem()
-		_, path := appCtx.JumpList.GetItemText(n)
-		appCtx.CurPane().Jump(Path(path))
-		appCtx.Mode = Normal
-		app.SetRoot(appCtx.Root, false)
+		selectJumpTarget(app, appCtx)
 	case tcell.KeyESC:
 		appCtx.Mode = Normal
 		app.SetRoot(appCtx.Root, false)
@@ -124,11 +124,6 @@ func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event
 			appCtx.JumpSearch = ""
 		}
 	case tcell.KeyRune:
-		//appCtx.JumpSearch += string(event.Rune())
-		//candidate := appCtx.JumpList.FindItems(appCtx.JumpSearch, "", false, true)
-		//if len(candidate) > 0 {
-		//	appCtx.JumpList.SetCurrentItem(candidate[0])
-		//}
 		n := appCtx.JumpList.GetCurrentItem()
 		switch event.Rune() {
 		case 'j':
@@ -170,14 +165,14 @@ func main() {
 	}
 
 	appCtx.Current = LeftPane
-	appCtx.Panes[LeftPane].Reload()
-	appCtx.Panes[RightPane].Reload()
+	appCtx.Reload(LeftPane)
+	appCtx.Reload(RightPane)
 
 	app := tview.NewApplication()
 
 	flex := tview.NewFlex().
-		AddItem(appCtx.Pane(LeftPane).W, 0, 1, true).
-		AddItem(appCtx.Pane(RightPane).W, 0, 1, false)
+		AddItem(appCtx.PaneWidget(LeftPane), 0, 1, true).
+		AddItem(appCtx.PaneWidget(RightPane), 0, 1, false)
 
 	appCtx.Root = flex
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
