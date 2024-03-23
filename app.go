@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/cockroachdb/errors"
+	"github.com/rivo/tview"
 )
 
 type AppMode int
@@ -9,12 +10,16 @@ type AppMode int
 const (
 	Normal = iota
 	IncSearch
+	SelectJump
 )
 
 type App struct {
-	Current PaneSide
-	Mode    AppMode
-	Panes   []*Pane
+	Current    PaneSide
+	Mode       AppMode
+	Panes      []*Pane
+	Root       *tview.Flex
+	JumpSearch string
+	JumpList   *tview.List
 }
 
 func NewApp(c *Config) (*App, error) {

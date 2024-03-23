@@ -16,6 +16,7 @@ type ConfigEntry struct {
 	LeftPath    Path
 	RightPath   Path
 	ScrollLines int
+	JumpList    map[string]string
 }
 
 type Config struct {
@@ -41,6 +42,9 @@ func LoadConfig(path Path) (*Config, error) {
 	if entry.ScrollLines == 0 {
 		entry.ScrollLines = DefaultScrollLines
 	}
+	if entry.JumpList == nil {
+		entry.JumpList = map[string]string{}
+	}
 	return &Config{Path: path, Body: &entry}, nil
 }
 
@@ -50,6 +54,7 @@ func GenDefaultConfig(path Path) (*ConfigEntry, error) {
 		LeftPath:    Path(c),
 		RightPath:   Path(c),
 		ScrollLines: DefaultScrollLines,
+		JumpList:    map[string]string{},
 	}
 	err := save(path, d)
 	if err != nil {

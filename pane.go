@@ -90,6 +90,16 @@ func (p *Pane) Down() error {
 	return p.Dir.Down(Path(p.Selected()))
 }
 
+func (p *Pane) Jump(path Path) error {
+	d, err := NewDir(path)
+	if err != nil {
+		return err
+	}
+	p.Dir = d
+	p.Reload()
+	return nil
+}
+
 func (p *Pane) GetText() string {
 	return p.T.GetText(false)
 }
