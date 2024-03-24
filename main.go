@@ -8,6 +8,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+const (
+	CofigFileName = "gf.toml"
+	LogFileName   = "debug.txt"
+)
+
 var (
 	logger *slog.Logger
 )
@@ -167,12 +172,12 @@ func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.
 
 func main() {
 	var err error
-	runlog, _ := os.Create("debug.txt")
+	runlog, _ := os.Create(LogFileName)
 	logger = slog.New(
 		slog.NewTextHandler(runlog, nil),
 	)
 
-	cfg, err := LoadConfig("gf.toml")
+	cfg, err := LoadConfig(CofigFileName)
 	if err != nil {
 		panic(err)
 	}
