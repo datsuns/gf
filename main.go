@@ -69,17 +69,21 @@ func enterJumpListSelection(app *tview.Application, appCtx *App, cfg *Config) {
 	app.SetRoot(m, false)
 }
 
+func scrollDown(pane *Pane, cfg *Config) {
+	if pane.CurItem()+cfg.Body.ScrollLines < pane.ItemCount() {
+		pane.SetItem(pane.CurItem() + cfg.Body.ScrollLines)
+	} else {
+		pane.SetItem(pane.ItemCount() - 1)
+	}
+}
+
 func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
 	pane := appCtx.CurPane()
 	switch event.Key() {
 	case tcell.KeyEnter:
 		pane.Down()
 	case tcell.KeyCtrlD:
-		if pane.CurItem()+cfg.Body.ScrollLines < pane.ItemCount() {
-			pane.SetItem(pane.CurItem() + cfg.Body.ScrollLines)
-		} else {
-			pane.SetItem(pane.ItemCount() - 1)
-		}
+		scrollDown(pane, cfg)
 	case tcell.KeyCtrlE:
 		createNewFile(app, appCtx, cfg)
 	case tcell.KeyCtrlJ:
