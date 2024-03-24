@@ -48,6 +48,14 @@ func exitIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.CurPane().ClearText()
 }
 
+// TODO imple
+func createNewFile(app *tview.Application, appCtx *App, cfg *Config) {
+}
+
+// TODO imple
+func createNewDirectory(app *tview.Application, appCtx *App, cfg *Config) {
+}
+
 func enterJumpListSelection(app *tview.Application, appCtx *App, cfg *Config) {
 	m := tview.NewList().ShowSecondaryText(true)
 	m.SetBorder(true)
@@ -72,8 +80,12 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		} else {
 			pane.SetItem(pane.ItemCount() - 1)
 		}
+	case tcell.KeyCtrlE:
+		createNewFile(app, appCtx, cfg)
 	case tcell.KeyCtrlJ:
 		enterJumpListSelection(app, appCtx, cfg)
+	case tcell.KeyCtrlK:
+		createNewDirectory(app, appCtx, cfg)
 	case tcell.KeyCtrlU:
 		pane.SetItem(pane.CurItem() - cfg.Body.ScrollLines)
 	case tcell.KeyRune:
