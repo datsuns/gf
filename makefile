@@ -2,10 +2,16 @@ SRC_ALL := $(wildcard *.go)
 SRC     := $(filter-out %_test.go,$(SRC_ALL))
 
 run:
-	go run $(SRC)
+	go run -race $(SRC)
 
 build:
-	go build
+	go build 
+
+release:
+	go build \
+		-a \
+		-ldflags="-s -w"
+
 
 test:
 	go test -v
