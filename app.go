@@ -11,15 +11,20 @@ const (
 	Normal = iota
 	IncSearch
 	SelectJump
+	CreateNewFile
+	CreateNewDirectory
+	Rename
 )
 
 type App struct {
-	Current    PaneSide
-	Mode       AppMode
-	Panes      []*Pane
-	Root       *tview.Flex
-	JumpSearch string
-	JumpList   *tview.List
+	Current        PaneSide
+	Mode           AppMode
+	Panes          []*Pane
+	Root           *tview.Flex
+	JumpSearch     string
+	JumpList       *tview.List
+	CreateCandiate *tview.InputField
+	ErrorInfo      *tview.TextView
 }
 
 func NewApp(c *Config) (*App, error) {

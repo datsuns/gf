@@ -1,8 +1,11 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -49,11 +52,27 @@ func exitIncSearch(_ *tview.Application, appCtx *App) {
 }
 
 // TODO imple
-func createNewFile(app *tview.Application, appCtx *App, cfg *Config) {
+func enterCreateNew(app *tview.Application, appCtx *App, _ *Config) {
+	appCtx.CreateCandiate = tview.NewInputField()
+	appCtx.CreateCandiate.SetTitle("New File")
+	appCtx.ErrorInfo = tview.NewTextView()
+	appCtx.ErrorInfo.SetText("hello")
+	f := tview.NewFlex()
+	f.SetTitle("New File")
+	f.SetDirection(tview.FlexRow)
+	f.AddItem(appCtx.CreateCandiate, 0, 1, true)
+	f.AddItem(appCtx.ErrorInfo, 1, 0, false)
+	app.SetRoot(f, false)
 }
 
-// TODO imple
-func createNewDirectory(app *tview.Application, appCtx *App, cfg *Config) {
+func enterCreateNewFileMode(app *tview.Application, appCtx *App, cfg *Config) {
+	appCtx.Mode = CreateNewFile
+	enterCreateNew(app, appCtx, cfg)
+}
+
+func enterCreateDirectoryMode(app *tview.Application, appCtx *App, cfg *Config) {
+	appCtx.Mode = CreateNewDirectory
+	enterCreateNew(app, appCtx, cfg)
 }
 
 func enterJumpListSelection(app *tview.Application, appCtx *App, cfg *Config) {
@@ -85,11 +104,11 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 	case tcell.KeyCtrlD:
 		scrollDown(pane, cfg)
 	case tcell.KeyCtrlE:
-		createNewFile(app, appCtx, cfg)
+		enterCreateNewFileMode(app, appCtx, cfg)
 	case tcell.KeyCtrlJ:
 		enterJumpListSelection(app, appCtx, cfg)
 	case tcell.KeyCtrlK:
-		createNewDirectory(app, appCtx, cfg)
+		enterCreateDirectoryMode(app, appCtx, cfg)
 	case tcell.KeyCtrlU:
 		pane.SetItem(pane.CurItem() - cfg.Body.ScrollLines)
 	case tcell.KeyRune:
@@ -179,12 +198,64 @@ func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event
 	return event
 }
 
+func createNewFile(appCtx *App, cfg *Config, path string) error {
+	if _, err := os.Create(path); err != nil {
+		appCtx.ErrorInfo.SetText(err.Error())
+		return err
+	} else {
+		ExecuteCommand(cfg.Body.Editor, path)
+		appCtx.CreateCandiate.SetText("")
+		return nil
+	}
+}
+
+func createNewDirectory(_ *tview.Application, _ *App, path string) error {
+	if err := os.Mkdir(path, 0666); err != nil {
+		return err
+	}
+	return nil
+}
+
+func mainHandlerCreateNew(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
+	switch event.Key() {
+	case tcell.KeyEnter:
+		name := appCtx.CreateCandiate.GetText()
+		fullpath := filepath.Join(appCtx.CurPane().Cur(), name)
+		if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
+			logger.Info("CreateNew", slog.Any("mode", appCtx.Mode), slog.Any("path", fullpath))
+			var err error
+			if appCtx.Mode == CreateNewFile {
+				err = createNewFile(appCtx, cfg, fullpath)
+			} else {
+				err = createNewDirectory(app, appCtx, fullpath)
+			}
+			if err == nil {
+				appCtx.CurPane().Reload()
+				backToNomal(app, appCtx)
+			}
+		} else {
+			if err == nil {
+				appCtx.ErrorInfo.SetText(fmt.Sprintf("file[%v] is already exists", fullpath))
+			} else {
+				appCtx.ErrorInfo.SetText(err.Error())
+			}
+		}
+	case tcell.KeyESC:
+		backToNomal(app, appCtx)
+	}
+	return event
+}
+
 func mainHandler(app *tview.Application, appCtx *App, cfg *Config, event *tcell.EventKey) *tcell.EventKey {
 	switch appCtx.Mode {
 	case IncSearch:
 		return mainHandlerIncSearch(app, appCtx, cfg, event)
 	case SelectJump:
 		return mainHandlerSelectJump(app, appCtx, cfg, event)
+	case CreateNewFile:
+		return mainHandlerCreateNew(app, appCtx, cfg, event)
+	case CreateNewDirectory:
+		return mainHandlerCreateNew(app, appCtx, cfg, event)
 	default:
 		return mainHandlerNormal(app, appCtx, cfg, event)
 	}

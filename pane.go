@@ -79,6 +79,7 @@ func (p *Pane) DirSelected() bool {
 
 func (p *Pane) Reload() {
 	p.W.Clear()
+	p.Dir.Glob()
 	p.W.SetTitle(p.Dir.Cur())
 
 	for _, f := range p.Dir.Entries {
