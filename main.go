@@ -102,19 +102,27 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 	return event
 }
 
+func updateIncSearch(pane *Pane) {
+	candidate := pane.Find(pane.GetText())
+	if len(candidate) > 0 {
+		pane.SetItem(candidate[0])
+	}
+}
+
 func mainHandlerIncSearch(app *tview.Application, appCtx *App, _ *Config, event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyEnter:
 		exitIncSearch(app, appCtx)
 	case tcell.KeyESC:
 		exitIncSearch(app, appCtx)
+	case tcell.KeyBS:
+		pane := appCtx.CurPane()
+		pane.SetText(TrimLastOne(pane.GetText()))
+		updateIncSearch(pane)
 	case tcell.KeyRune:
 		pane := appCtx.CurPane()
 		pane.SetText(pane.GetText() + string(event.Rune()))
-		candidate := pane.Find(pane.GetText())
-		if len(candidate) > 0 {
-			pane.SetItem(candidate[0])
-		}
+		updateIncSearch(pane)
 	}
 	return event
 }
@@ -138,11 +146,7 @@ func mainHandlerSelectJump(app *tview.Application, appCtx *App, _ *Config, event
 	case tcell.KeyESC:
 		backToNomal(app, appCtx)
 	case tcell.KeyBS:
-		if len(appCtx.JumpSearch) > 0 {
-			appCtx.JumpSearch = appCtx.JumpSearch[:len(appCtx.JumpSearch)-1]
-		} else {
-			appCtx.JumpSearch = ""
-		}
+		appCtx.JumpSearch = TrimLastOne(appCtx.JumpSearch)
 	case tcell.KeyRune:
 		n := appCtx.JumpList.GetCurrentItem()
 		switch event.Rune() {
