@@ -51,7 +51,6 @@ func exitIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.CurPane().ClearText()
 }
 
-// TODO imple
 func enterCreateNew(app *tview.Application, appCtx *App, _ *Config) {
 	appCtx.CreateCandiate = tview.NewInputField()
 	appCtx.CreateCandiate.SetTitle("New File")
