@@ -55,7 +55,7 @@ func enterCreateNew(app *tview.Application, appCtx *App, _ *Config) {
 	appCtx.CreateCandiate = tview.NewInputField()
 	appCtx.CreateCandiate.SetTitle("New File")
 	appCtx.ErrorInfo = tview.NewTextView()
-	appCtx.ErrorInfo.SetText("hello")
+	appCtx.ErrorInfo.SetText("")
 	f := tview.NewFlex()
 	f.SetTitle("New File")
 	f.SetDirection(tview.FlexRow)
