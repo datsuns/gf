@@ -1,6 +1,8 @@
 package main
 
 import (
+	"path/filepath"
+
 	"github.com/rivo/tview"
 )
 
@@ -60,6 +62,12 @@ func (p *Pane) Find(s string) []int {
 func (p *Pane) Selected() string {
 	main, _ := p.W.GetItemText(p.W.GetCurrentItem())
 	return main
+}
+
+func (p *Pane) SelectedFullPath() string {
+	entry, _ := p.W.GetItemText(p.W.GetCurrentItem())
+	fullpath := filepath.Join(p.Dir.Cur(), entry)
+	return fullpath
 }
 
 func (p *Pane) DirSelected() bool {

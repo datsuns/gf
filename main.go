@@ -24,6 +24,12 @@ func saveConfig(appCtx *App, cfg *Config) {
 	cfg.Save()
 }
 
+func openEditor(_ *tview.Application, appCtx *App, cfg *Config) {
+	//logger.Info("openEditor", slog.Any("editor", cfg.Body.Editor), slog.Any("path", appCtx.CurPane().SelectedFullPath()))
+	path := appCtx.CurPane().SelectedFullPath()
+	ExecuteCommand(cfg.Body.Editor, path)
+}
+
 func enterIncSearch(_ *tview.Application, appCtx *App) {
 	appCtx.Mode = IncSearch
 	w := appCtx.CurPaneWidget()
@@ -67,6 +73,8 @@ func mainHandlerNormal(app *tview.Application, appCtx *App, cfg *Config, event *
 		pane.SetItem(pane.CurItem() - cfg.Body.ScrollLines)
 	case tcell.KeyRune:
 		switch event.Rune() {
+		case 'e':
+			openEditor(app, appCtx, cfg)
 		case 'f':
 			enterIncSearch(app, appCtx)
 		case 'h':
